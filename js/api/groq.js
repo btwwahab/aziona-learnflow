@@ -1,7 +1,8 @@
 // Groq API integration for LLaMA 3 AI assistance
 class GroqAPI {
     constructor() {
-        this.apiUrl = CONFIG.GROQ_API_URL; // '/api/groq'
+        this.apiUrl = CONFIG.GROQ_API_URL; // Direct API URL
+        this.apiKey = CONFIG.GROQ_API_KEY;
         this.model = CONFIG.GROQ_MODEL;
         this.defaultParams = {
             temperature: CONFIG.GROQ_TEMPERATURE,
@@ -11,26 +12,28 @@ class GroqAPI {
         };
     }
     
-    // Make API request via serverless function
+    // Make API request directly to Groq
     async makeRequest(messages, options = {}) {
         try {
             const requestBody = {
+                model: this.model,
                 messages: messages,
-                options: {
-                    ...this.defaultParams,
-                    ...options
-                }
+                ...this.defaultParams,
+                ...options
             };
             
             const response = await fetch(this.apiUrl, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.apiKey}`
                 },
                 body: JSON.stringify(requestBody)
             });
             
             if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Groq API Error:', response.status, errorText);
                 throw new Error(`API error: ${response.status}`);
             }
             
@@ -808,23 +811,23 @@ async generateLearningSummary(progress, userData) {
         
         const prompt = `Generate a comprehensive learning summary for a student who has completed their learning journey.
 
-Student Information:
-- Name: ${userData.name}
-- Learning Goal: ${userData.learningGoal}
-- Skill Level: ${userData.skillLevel}
-- Videos Completed: ${statistics.completedVideos}/${statistics.totalVideos}
-- Overall Progress: ${statistics.progressPercentage}%
-- Average Quiz Score: ${statistics.averageQuizScore}%
+        Student Information:
+        - Name: ${userData.name}
+        - Learning Goal: ${userData.learningGoal}
+        - Skill Level: ${userData.skillLevel}
+        - Videos Completed: ${statistics.completedVideos}/${statistics.totalVideos}
+        - Overall Progress: ${statistics.progressPercentage}%
+        - Average Quiz Score: ${statistics.averageQuizScore}%
 
-Please provide:
-1. A congratulatory message
-2. Key achievements and progress made
-3. Skills acquired and knowledge gained
-4. Areas of strength based on performance
-5. Suggestions for continued learning
-6. Motivational closing
+        Please provide:
+        1. A congratulatory message
+        2. Key achievements and progress made
+        3. Skills acquired and knowledge gained
+        4. Areas of strength based on performance
+        5. Suggestions for continued learning
+        6. Motivational closing
 
-Keep the tone encouraging and personalized. Focus on the student's journey and growth.`;
+        Keep the tone encouraging and personalized. Focus on the student's journey and growth.`;
         
         const messages = [
             {
@@ -846,25 +849,25 @@ Keep the tone encouraging and personalized. Focus on the student's journey and g
         // Fallback summary
         return `Congratulations, ${userData.name}! 🎉
 
-You've successfully completed your ${userData.learningGoal} learning journey! Here's what you've accomplished:
+        You've successfully completed your ${userData.learningGoal} learning journey! Here's what you've accomplished:
 
-✅ **Progress Made:**
-- Completed ${progress.videos.filter(v => v.completed).length} out of ${progress.videos.length} videos
-- Achieved ${progress.overallProgress}% overall progress
-- Demonstrated ${userData.skillLevel} level understanding
+        ✅ **Progress Made:**
+        - Completed ${progress.videos.filter(v => v.completed).length} out of ${progress.videos.length} videos
+        - Achieved ${progress.overallProgress}% overall progress
+        - Demonstrated ${userData.skillLevel} level understanding
 
-🎯 **Key Achievements:**
-- Built a solid foundation in ${userData.learningGoal}
-- Developed practical skills through video lessons
-- Showed commitment to continuous learning
+        🎯 **Key Achievements:**
+        - Built a solid foundation in ${userData.learningGoal}
+        - Developed practical skills through video lessons
+        - Showed commitment to continuous learning
 
-🚀 **Next Steps:**
-- Practice what you've learned with real projects
-- Explore advanced topics in ${userData.learningGoal}
-- Share your knowledge with others
-- Consider related areas of study
+        🚀 **Next Steps:**
+        - Practice what you've learned with real projects
+        - Explore advanced topics in ${userData.learningGoal}
+        - Share your knowledge with others
+        - Consider related areas of study
 
-Keep up the excellent work! Learning is a journey, and you've taken important steps forward. Your dedication and effort will serve you well in your continued growth.`;
+        Keep up the excellent work! Learning is a journey, and you've taken important steps forward. Your dedication and effort will serve you well in your continued growth.`;
     }
 }
 

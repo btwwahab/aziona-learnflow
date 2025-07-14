@@ -292,31 +292,33 @@ async generateQuiz(video, userProfile) {
         }
     }
 
-    // Display quiz
-    displayQuiz() {
-        if (!this.currentQuiz) return;
+displayQuiz() {
+    if (!this.currentQuiz) return;
 
-        // Update quiz header
-        const totalQuestions = document.getElementById('total-questions');
-        if (totalQuestions) {
-            totalQuestions.textContent = this.currentQuiz.questions.length;
-        }
+    // Restore navigation buttons in case they were hidden
+    this.restoreNavigationButtons();
 
-        // Display current question
-        this.displayCurrentQuestion();
-
-        // Update navigation
-        this.updateNavigationButtons();
-
-        // Initialize progress
-        this.updateQuizProgress();
-
-        // Animate quiz appearance
-        const quizCard = document.querySelector('.quiz-card');
-        if (quizCard) {
-            animationManager.scaleIn(quizCard, 0.5);
-        }
+    // Update quiz header
+    const totalQuestions = document.getElementById('total-questions');
+    if (totalQuestions) {
+        totalQuestions.textContent = this.currentQuiz.questions.length;
     }
+
+    // Display current question
+    this.displayCurrentQuestion();
+
+    // Update navigation
+    this.updateNavigationButtons();
+
+    // Initialize progress
+    this.updateQuizProgress();
+
+    // Animate quiz appearance
+    const quizCard = document.querySelector('.quiz-card');
+    if (quizCard) {
+        animationManager.scaleIn(quizCard, 0.5);
+    }
+}
 
     // Display current question
     displayCurrentQuestion() {
@@ -641,11 +643,14 @@ async showResults(results) {
             quizHeader.textContent = 'Quiz Results';
         }
 
-        // Hide quiz navigation
-        const quizNavigation = document.querySelector('.quiz-navigation');
-        if (quizNavigation) {
-            // quizNavigation.style.display = 'none';
-        }
+        // Hide ONLY the specific quiz navigation buttons, not the entire container
+        const prevButton = document.getElementById('prev-question');
+        const nextButton = document.getElementById('next-question');
+        const submitButton = document.getElementById('submit-quiz');
+
+        if (prevButton) prevButton.style.display = 'none';
+        if (nextButton) nextButton.style.display = 'none';
+        if (submitButton) submitButton.style.display = 'none';
 
         // Update quiz progress to show completion
         const questionNumber = document.getElementById('question-number');
@@ -662,6 +667,17 @@ async showResults(results) {
         console.error('Error showing results:', error);
         this.showError('Failed to display quiz results: ' + error.message);
     }
+}
+
+// Add this method to restore navigation buttons
+restoreNavigationButtons() {
+    const prevButton = document.getElementById('prev-question');
+    const nextButton = document.getElementById('next-question');
+    const submitButton = document.getElementById('submit-quiz');
+
+    if (prevButton) prevButton.style.display = 'inline-block';
+    if (nextButton) nextButton.style.display = 'inline-block';
+    if (submitButton) submitButton.style.display = 'inline-block';
 }
 
 // Add method to update quiz header score:
@@ -1028,23 +1044,25 @@ async continueLearning() {
     }
 }
 
-    // Retake quiz
-    async retakeQuiz() {
-        // Reset quiz state
-        this.currentQuestionIndex = 0;
-        this.userAnswers = [];
-        this.quizStartTime = new Date();
+async retakeQuiz() {
+    // Reset quiz state
+    this.currentQuestionIndex = 0;
+    this.userAnswers = [];
+    this.quizStartTime = new Date();
 
-        // Show quiz section
-        if (window.pageTransitionManager) {
-            await window.pageTransitionManager.showSection('quiz-section');
-        } else if (window.azionaApp) {
-            window.azionaApp.showSection('quiz-section');
-        }
+    // Restore navigation buttons
+    this.restoreNavigationButtons();
 
-        // Display quiz
-        this.displayQuiz();
+    // Show quiz section
+    if (window.pageTransitionManager) {
+        await window.pageTransitionManager.showSection('quiz-section');
+    } else if (window.azionaApp) {
+        window.azionaApp.showSection('quiz-section');
     }
+
+    // Display quiz
+    this.displayQuiz();
+}
 
     // Show error message
     showError(message) {

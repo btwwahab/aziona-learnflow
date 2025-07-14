@@ -1,9 +1,9 @@
 // YouTube Data API v3 integration
 class YouTubeAPI {
     constructor() {
-        this.apiUrl = CONFIG.YOUTUBE_API_URL; // '/api/youtube'
-        this.detailsUrl = CONFIG.YOUTUBE_DETAILS_URL; // '/api/youtube-details'
-        this.defaultParams = CONFIG.YOUTUBE_SEARCH_PARAMS;
+        this.apiKey = CONFIG.YOUTUBE_API_KEY;
+        this.baseURL = CONFIG.YOUTUBE_API_URL;
+        this.detailsURL = CONFIG.YOUTUBE_DETAILS_URL;
     }
     
     // Search for videos based on learning goal and skill level
@@ -11,15 +11,18 @@ class YouTubeAPI {
         try {
             const searchQuery = this.buildSearchQuery(learningGoal);
             
-            const url = new URL(this.apiUrl, window.location.origin);
-            url.searchParams.append('q', searchQuery);
-            url.searchParams.append('maxResults', maxResults);
-            url.searchParams.append('part', 'snippet');
-            url.searchParams.append('type', 'video');
-            url.searchParams.append('videoDuration', 'medium');
-            url.searchParams.append('videoDefinition', 'high');
-            url.searchParams.append('order', 'relevance');
+            const params = {
+                part: 'snippet',
+                type: 'video',
+                q: searchQuery,
+                maxResults: maxResults,
+                videoDuration: 'medium',
+                videoDefinition: 'high',
+                order: 'relevance',
+                key: this.apiKey
+            };
             
+            const url = `${this.baseURL}?${new URLSearchParams(params)}`;
             const response = await fetch(url);
             
             if (!response.ok) {
@@ -47,39 +50,32 @@ class YouTubeAPI {
     // Build search query based on learning goal
     buildSearchQuery(learningGoal) {
         const goalConfig = CONFIG.LEARNING_GOALS[learningGoal];
-        
-        if (!goalConfig) {
-            return `${learningGoal} tutorial beginner`;
+        if (goalConfig && goalConfig.keywords) {
+            return goalConfig.keywords.join(' ') + ' tutorial';
         }
-        
-        const keywords = goalConfig.keywords.join(' ');
-        return `${keywords} tutorial`;
+        return learningGoal + ' tutorial';
     }
     
     // Get video details
     async getVideoDetails(videoIds) {
         try {
-            if (!videoIds || videoIds.length === 0) {
-                return [];
-            }
-            
-            const url = new URL(this.detailsUrl, window.location.origin);
-            url.searchParams.append('ids', videoIds.join(','));
-            
+            const params = {
+                part: 'snippet,contentDetails,statistics',
+                id: videoIds.join(','),
+                key: this.apiKey
+            };
+
+            const url = `${this.detailsURL}?${new URLSearchParams(params)}`;
             const response = await fetch(url);
-            
+
             if (!response.ok) {
                 throw new Error(`YouTube API error: ${response.status}`);
             }
-            
+
             const data = await response.json();
-            
-            if (!data.items || data.items.length === 0) {
-                return [];
-            }
-            
+
             return this.processVideoDetails(data.items);
-            
+
         } catch (error) {
             console.error('Error getting video details:', error);
             return [];
@@ -88,35 +84,20 @@ class YouTubeAPI {
 
     // Get video captions/transcripts
     async getVideoTranscript(videoId) {
-        try {
-            // Note: YouTube API doesn't provide direct access to captions for third-party apps
-            // This is a placeholder for future implementation or alternative solutions
-            console.warn('Video transcript feature requires additional setup');
-            return null;
-        } catch (error) {
-            console.error('Error getting video transcript:', error);
-            return null;
-        }
+        // Note: YouTube API doesn't provide direct transcript access
+        // This would require additional implementation
+        return null;
     }
 
-    // Process raw video data from API
-// Process video data (same as before)
+    // Process video data (same as before)
     processVideoData(items) {
         return items.map(item => ({
             videoId: item.id.videoId,
             title: item.snippet.title,
             description: item.snippet.description,
-            thumbnail: {
-                default: item.snippet.thumbnails.default?.url,
-                medium: item.snippet.thumbnails.medium?.url,
-                high: item.snippet.thumbnails.high?.url,
-                maxres: item.snippet.thumbnails.maxres?.url
-            },
+            thumbnail: item.snippet.thumbnails.medium?.url,
             channelTitle: item.snippet.channelTitle,
-            channelId: item.snippet.channelId,
-            publishedAt: item.snippet.publishedAt,
-            url: `https://www.youtube.com/watch?v=${item.id.videoId}`,
-            embedUrl: `https://www.youtube.com/embed/${item.id.videoId}`
+            publishedAt: item.snippet.publishedAt
         }));
     }
     
@@ -126,48 +107,36 @@ class YouTubeAPI {
             videoId: item.id,
             title: item.snippet.title,
             description: item.snippet.description,
-            duration: this.parseDuration(item.contentDetails.duration),
-            viewCount: parseInt(item.statistics.viewCount || 0),
-            likeCount: parseInt(item.statistics.likeCount || 0),
-            commentCount: parseInt(item.statistics.commentCount || 0),
-            publishedAt: item.snippet.publishedAt,
+            thumbnail: item.snippet.thumbnails.medium?.url,
             channelTitle: item.snippet.channelTitle,
-            channelId: item.snippet.channelId,
-            thumbnail: {
-                default: item.snippet.thumbnails.default?.url,
-                medium: item.snippet.thumbnails.medium?.url,
-                high: item.snippet.thumbnails.high?.url,
-                maxres: item.snippet.thumbnails.maxres?.url
-            },
-            tags: item.snippet.tags || [],
-            categoryId: item.snippet.categoryId,
-            url: `https://www.youtube.com/watch?v=${item.id}`,
-            embedUrl: `https://www.youtube.com/embed/${item.id}`
+            publishedAt: item.snippet.publishedAt,
+            duration: this.parseDuration(item.contentDetails.duration),
+            viewCount: parseInt(item.statistics.viewCount),
+            likeCount: parseInt(item.statistics.likeCount || 0),
+            commentCount: parseInt(item.statistics.commentCount || 0)
         }));
     }
     
     // Parse duration (same as before)
     parseDuration(duration) {
         const match = duration.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
-        if (!match) return 0;
+        const hours = (match[1] || '').replace('H', '') || '0';
+        const minutes = (match[2] || '').replace('M', '') || '0';
+        const seconds = (match[3] || '').replace('S', '') || '0';
         
-        const hours = parseInt(match[1]) || 0;
-        const minutes = parseInt(match[2]) || 0;
-        const seconds = parseInt(match[3]) || 0;
-        
-        return hours * 3600 + minutes * 60 + seconds;
+        return parseInt(hours) * 3600 + parseInt(minutes) * 60 + parseInt(seconds);
     }
 
     // Format duration in human-readable format
     formatDuration(seconds) {
         const hours = Math.floor(seconds / 3600);
         const minutes = Math.floor((seconds % 3600) / 60);
-        const remainingSeconds = seconds % 60;
+        const secs = seconds % 60;
 
         if (hours > 0) {
-            return `${hours}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+            return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
         } else {
-            return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+            return `${minutes}:${secs.toString().padStart(2, '0')}`;
         }
     }
 
@@ -211,8 +180,7 @@ class YouTubeAPI {
         }
     }
 
-    // Search for educational channels
-    async searchEducationalChannels(topic, maxResults = 10) {
+async searchEducationalChannels(topic, maxResults = 10) {
         try {
             const params = {
                 part: 'snippet',
@@ -222,7 +190,7 @@ class YouTubeAPI {
                 key: this.apiKey
             };
 
-            const url = `${this.baseURL}/search?${new URLSearchParams(params)}`;
+            const url = `${this.baseURL}?${new URLSearchParams(params)}`;
             const response = await fetch(url);
 
             if (!response.ok) {
