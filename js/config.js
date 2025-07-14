@@ -4,16 +4,14 @@ const CONFIG = {
     APP_NAME: 'Aziona LearnFlow',
     VERSION: '1.0.0',
 
-    // API URLs - Updated to use Vercel serverless functions
-    YOUTUBE_API_URL: '/api/youtube',
-    YOUTUBE_DETAILS_URL: '/api/youtube-details',
-    GROQ_API_URL: '/api/groq',
+    // API URLs - Updated for local development
+    YOUTUBE_API_URL: 'https://www.googleapis.com/youtube/v3/search',
+    YOUTUBE_DETAILS_URL: 'https://www.googleapis.com/youtube/v3/videos',
+    GROQ_API_URL: 'https://api.groq.com/openai/v1/chat/completions',
 
-    // You'll need to add your actual API keys here
-    YOUTUBE_API_KEY: 'YOur_API_Key_Here',
-    GROQ_API_KEY: 'YOur_API_Key_Here',
 
-    // Groq Configuration
+
+    // Rest of your configuration remains the same...
     GROQ_MODEL: 'llama3-8b-8192',
     GROQ_TEMPERATURE: 0.7,
     GROQ_MAX_TOKENS: 1024,
