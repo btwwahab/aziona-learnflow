@@ -1,20 +1,20 @@
 /* Nebula Theme */
 .theme-nebula {
-    --primary-color: #9b59b6;
-    --secondary-color: #e74c3c;
-    --accent-color: #1abc9c;
-    --background-color: #0c0c0c;
+    --primary-color: #667eea;
+    --secondary-color: #764ba2;
+    --accent-color: #f093fb;
+    --background-color: #0f0f23;
     --surface-color: #1a1a2e;
     --text-color: #eee;
-    --text-secondary: #a0a0a0;
-    --border-color: rgba(155, 89, 182, 0.3);
-    --primary-rgb: 155, 89, 182;
-    --secondary-rgb: 231, 76, 60;
-    --accent-rgb: 26, 188, 156;
-    --success-color: #27ae60;
-    --warning-color: #f39c12;
-    --error-color: #e74c3c;
-    --info-color: #3498db;
+    --text-secondary: #c7c7c7;
+    --border-color: #2d2d44;
+    --primary-rgb: 102, 126, 234;
+    --secondary-rgb: 118, 75, 162;
+    --accent-rgb: 240, 147, 251;
+    --success-color: #4ecdc4;
+    --warning-color: #ffe66d;
+    --error-color: #ff6b6b;
+    --info-color: #a8e6cf;
 }
 
 /* Nebula theme specific styles */

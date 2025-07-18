@@ -70,7 +70,7 @@ h1, h2, h3, h4, h5, h6 {
 /* Theme Toggle */
 .theme-toggle-container {
     position: fixed;
-    top: 45px;
+    top: 15px;
     right: 20px;
     z-index: 1000;
 }
@@ -103,7 +103,7 @@ h1, h2, h3, h4, h5, h6 {
 /* Header */
 .header {
     position: sticky;
-    top: 30px;
+    /* top: 30px; */
     z-index: 100;
     padding: 20px;
     margin-bottom: 2rem;
