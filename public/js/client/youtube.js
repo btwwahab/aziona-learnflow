@@ -17,7 +17,7 @@ class YouTubeAPI {
             maxResults: maxResults
         });
 
-        const response = await fetch(`/api/youtube?${params.toString()}`);
+        const response = await fetch(`/api/you-tube-client?${params.toString()}`);
 
         if (!response.ok) {
             throw new Error(`YouTube API error: ${response.status}`);
