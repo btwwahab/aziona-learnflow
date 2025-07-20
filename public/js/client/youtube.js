@@ -53,30 +53,22 @@ class YouTubeAPI {
     }
     
     // Get video details
-    async getVideoDetails(videoIds) {
-        try {
-            const params = {
-                part: 'snippet,contentDetails,statistics',
-                id: videoIds.join(','),
-                key: this.apiKey
-            };
-
-            const url = `${this.detailsURL}?${new URLSearchParams(params)}`;
-            const response = await fetch(url);
-
-            if (!response.ok) {
-                throw new Error(`YouTube API error: ${response.status}`);
-            }
-
-            const data = await response.json();
-
-            return this.processVideoDetails(data.items);
-
-        } catch (error) {
-            console.error('Error getting video details:', error);
-            return [];
+async getVideoDetails(videoIds) {
+    try {
+        const params = new URLSearchParams({
+            ids: videoIds.join(',')
+        });
+        const response = await fetch(`/api/youtube-details?${params.toString()}`);
+        if (!response.ok) {
+            throw new Error(`YouTube API error: ${response.status}`);
         }
+        const data = await response.json();
+        return this.processVideoDetails(data.items);
+    } catch (error) {
+        console.error('Error getting video details:', error);
+        return [];
     }
+}
 
     // Get video captions/transcripts
     async getVideoTranscript(videoId) {
@@ -138,43 +130,39 @@ class YouTubeAPI {
 
     // Get channel information
     async getChannelInfo(channelId) {
-        try {
-            const params = {
-                part: 'snippet,statistics',
-                id: channelId,
-                key: this.apiKey
-            };
+    try {
+        const params = new URLSearchParams({
+            ids: channelId
+        });
+        const response = await fetch(`/api/youtube-channels?${params.toString()}`);
 
-            const url = `${this.baseURL}/channels?${new URLSearchParams(params)}`;
-            const response = await fetch(url);
-
-            if (!response.ok) {
-                throw new Error(`YouTube API error: ${response.status}`);
-            }
-
-            const data = await response.json();
-
-            if (data.items && data.items.length > 0) {
-                const channel = data.items[0];
-                return {
-                    channelId: channel.id,
-                    title: channel.snippet.title,
-                    description: channel.snippet.description,
-                    thumbnail: channel.snippet.thumbnails.default?.url,
-                    subscriberCount: parseInt(channel.statistics.subscriberCount || 0),
-                    viewCount: parseInt(channel.statistics.viewCount || 0),
-                    videoCount: parseInt(channel.statistics.videoCount || 0),
-                    publishedAt: channel.snippet.publishedAt
-                };
-            }
-
-            return null;
-
-        } catch (error) {
-            console.error('Error getting channel info:', error);
-            return null;
+        if (!response.ok) {
+            throw new Error(`YouTube API error: ${response.status}`);
         }
+
+        const data = await response.json();
+
+        if (data.items && data.items.length > 0) {
+            const channel = data.items[0];
+            return {
+                channelId: channel.id,
+                title: channel.snippet.title,
+                description: channel.snippet.description,
+                thumbnail: channel.snippet.thumbnails.default?.url,
+                subscriberCount: parseInt(channel.statistics.subscriberCount || 0),
+                viewCount: parseInt(channel.statistics.viewCount || 0),
+                videoCount: parseInt(channel.statistics.videoCount || 0),
+                publishedAt: channel.snippet.publishedAt
+            };
+        }
+
+        return null;
+
+    } catch (error) {
+        console.error('Error getting channel info:', error);
+        return null;
     }
+}
 
 async searchEducationalChannels(topic, maxResults = 10) {
         try {
@@ -211,38 +199,33 @@ async searchEducationalChannels(topic, maxResults = 10) {
 
     // Get video comments (for engagement analysis)
     async getVideoComments(videoId, maxResults = 20) {
-        try {
-            const params = {
-                part: 'snippet',
-                videoId,
-                maxResults,
-                order: 'relevance',
-                key: this.apiKey
-            };
+    try {
+        const params = new URLSearchParams({
+            videoId,
+            maxResults
+        });
+        const response = await fetch(`/api/youtube-comments?${params.toString()}`);
 
-            const url = `${this.baseURL}/commentThreads?${new URLSearchParams(params)}`;
-            const response = await fetch(url);
-
-            if (!response.ok) {
-                throw new Error(`YouTube API error: ${response.status}`);
-            }
-
-            const data = await response.json();
-
-            return data.items.map(item => ({
-                commentId: item.id,
-                text: item.snippet.topLevelComment.snippet.textDisplay,
-                authorDisplayName: item.snippet.topLevelComment.snippet.authorDisplayName,
-                likeCount: item.snippet.topLevelComment.snippet.likeCount,
-                publishedAt: item.snippet.topLevelComment.snippet.publishedAt,
-                updatedAt: item.snippet.topLevelComment.snippet.updatedAt
-            }));
-
-        } catch (error) {
-            console.error('Error getting video comments:', error);
-            return [];
+        if (!response.ok) {
+            throw new Error(`YouTube API error: ${response.status}`);
         }
+
+        const data = await response.json();
+
+        return data.items.map(item => ({
+            commentId: item.id,
+            text: item.snippet.topLevelComment.snippet.textDisplay,
+            authorDisplayName: item.snippet.topLevelComment.snippet.authorDisplayName,
+            likeCount: item.snippet.topLevelComment.snippet.likeCount,
+            publishedAt: item.snippet.topLevelComment.snippet.publishedAt,
+            updatedAt: item.snippet.topLevelComment.snippet.updatedAt
+        }));
+
+    } catch (error) {
+        console.error('Error getting video comments:', error);
+        return [];
     }
+}
 
     // Analyze video quality based on various metrics
     analyzeVideoQuality(videoData) {
