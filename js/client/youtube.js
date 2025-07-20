@@ -8,38 +8,34 @@ class YouTubeAPI {
     
     // Search for videos based on learning goal and skill level
     async searchVideos(learningGoal, maxResults = CONFIG.MAX_VIDEOS) {
-        try {
-            const searchQuery = this.buildSearchQuery(learningGoal);
-            
-            const params = {
-                part: 'snippet',
-                type: 'video',
-                q: searchQuery,
-                maxResults: maxResults,
-                videoDuration: 'medium',
-                videoDefinition: 'high',
-                order: 'relevance',
-                key: this.apiKey
-            };
-            
-            const url = `${this.baseURL}?${new URLSearchParams(params)}`;
-            const response = await fetch(url);
-            
-            if (!response.ok) {
-                throw new Error(`YouTube API error: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            
-            if (!data.items || data.items.length === 0) {
-                return [];
-            }
-            
-            const processedVideos = this.processVideoData(data.items);
-            const videoIds = processedVideos.map(video => video.videoId);
-            const detailedVideos = await this.getVideoDetails(videoIds);
-            
-            return detailedVideos;
+        try  {
+        const searchQuery = this.buildSearchQuery(learningGoal);
+
+        // Call your Vercel serverless function instead of YouTube API directly
+        const params = new URLSearchParams({
+            q: searchQuery,
+            maxResults: maxResults
+        });
+
+        const response = await fetch(`/api/youtube?${params.toString()}`);
+
+        if (!response.ok) {
+            throw new Error(`YouTube API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (!data.items || data.items.length === 0) {
+            return [];
+        }
+
+        const processedVideos = this.processVideoData(data.items);
+        const videoIds = processedVideos.map(video => video.videoId);
+
+        // Optionally, you can also proxy getVideoDetails through a serverless function
+        const detailedVideos = await this.getVideoDetails(videoIds);
+
+        return detailedVideos;
             
         } catch (error) {
             console.error('Error searching YouTube videos:', error);

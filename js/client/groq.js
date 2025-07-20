@@ -15,30 +15,19 @@ class GroqAPI {
     // Make API request directly to Groq
     async makeRequest(messages, options = {}) {
         try {
-            const requestBody = {
-                model: this.model,
-                messages: messages,
-                ...this.defaultParams,
-                ...options
-            };
-            
-            const response = await fetch(this.apiUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.apiKey}`
-                },
-                body: JSON.stringify(requestBody)
-            });
-            
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('Groq API Error:', response.status, errorText);
-                throw new Error(`API error: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            return data.choices[0].message.content;
+            const res = await fetch('/api/groq-client', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            messages,
+            model: this.model,
+            ...this.defaultParams,
+            ...options
+        })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Groq API error');
+    return data.choices[0].message.content;
             
         } catch (error) {
             console.error('Error making API request:', error);
